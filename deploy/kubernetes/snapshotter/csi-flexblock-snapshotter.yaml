@@ -1,0 +1,45 @@
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: csi-flexblock-snapshotter
+spec:
+  serviceName: "csi-flexblock-snapshotter"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csi-flexblock-snapshotter
+  template:
+    metadata:
+      labels:
+        app: csi-flexblock-snapshotter
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - csi-flexblockplugin
+            topologyKey: kubernetes.io/hostname
+      serviceAccount: csi-snapshotter
+      containers:
+        - name: csi-snapshotter
+          image: k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.0
+          args:
+            - -v=5
+            - --csi-address=/csi/csi.sock
+          securityContext:
+            # This is necessary only for systems with SELinux, where
+            # non-privileged sidecar containers cannot access unix domain socket
+            # created by privileged CSI driver container.
+            privileged: true
+          volumeMounts:
+            - mountPath: /csi
+              name: socket-dir
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/plugins/csi-flexblock
+            type: DirectoryOrCreate
+          name: socket-dir
