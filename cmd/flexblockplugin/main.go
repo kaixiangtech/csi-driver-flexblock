@@ -22,7 +22,7 @@ import (
 	"os"
 	"path"
 
-	"192.168.108.165/kubernetes-csi/csi-driver-host-path/pkg/flexblock"
+	"192.168.108.165/kubernetes-csi/csi-driver-flexblock/pkg/flexblock"
 )
 
 func init() {

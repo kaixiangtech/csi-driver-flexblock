@@ -1,4 +1,4 @@
-module github.com/kubernetes-csi/csi-driver-host-path
+module 192.168.108.165/kubernetes-csi/csi-driver-flexblock
 
 go 1.12
 

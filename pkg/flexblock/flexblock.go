@@ -244,7 +244,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
 		return nil, fmt.Errorf("unsupported access type %v", volAccessType)
 	}
 
-	flexBlockVol := flexBlockVolume{
+	flexblockVol := flexBlockVolume{
 		VolID:         volID,
 		VolName:       name,
 		VolSize:       cap,
