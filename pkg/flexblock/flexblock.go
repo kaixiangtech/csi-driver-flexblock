@@ -26,11 +26,12 @@ import (
     "strings"
     "strconv"
     "time"
+    "regexp"
 
     "github.com/golang/glog"
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"
-    "k8s.io/kubernetes/pkg/volume/util/volumepathhandler"
+    // "k8s.io/kubernetes/pkg/volume/util/volumepathhandler"
     utilexec "k8s.io/utils/exec"
 
     timestamp "github.com/golang/protobuf/ptypes/timestamp"
@@ -213,8 +214,9 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
 
     size := fmt.Sprintf("%dM", cap/mib)
     var cmd []string
-    cmd = []string{"xioadm", "vdi", "create", volID, size}
     executor := utilexec.New()
+
+    cmd = []string{"xioadm", "vdi", "create", volID, size}
     glog.V(4).Infof("Command Start: %v", cmd)
     out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
     glog.V(4).Infof("Command Finish: %v", string(out))
@@ -230,16 +232,26 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
     if err != nil {
         return nil, status.Errorf(codes.Internal, "failed createflexblockvol for andes error %v: %v", err, string(out))
     }
-    if strings.Contains(string(out), volID) {
+    if strings.Contains(string(out), iqnname) {
         return nil, status.Errorf(codes.Internal, "failed createflexblockvol find %v in target ", volID)
     } else {
+            
         lasttid := 0
-        tgtinfo := string(out)
-        tgtinfolastindex := strings.LastIndex(tgtinfo, "Target ")
+        tgtinfolastindex := strings.LastIndex(string(out), "Target ")
         if tgtinfolastindex != -1 {
-            lasttid1,_ := strconv.Atoi(tgtinfo[tgtinfolastindex+7:])
+            lasttidinfo := string(out)[tgtinfolastindex:]
+
+            // reg := regexp.MustCompile("Target [\\d]+: iqn.")
+            // MEId := reg.FindString(lasttidinfo)
+
+            reg1 := regexp.MustCompile("Target [\\d]+:")
+            MEId1 := reg1.FindString(lasttidinfo)
+            l3:=strings.Count(MEId1,"")-1
+
+            lasttid1,_ := strconv.Atoi(MEId1[7:l3-1])
             lasttid = lasttid1
         }
+
         tid := int(lasttid+1)
         tidstr := strconv.Itoa(tid)
         cmd = []string{"tgtadm", "-L", "iscsi", "-m", "target", "-o", "new", "-t", tidstr, "-T", iqnname}
@@ -256,7 +268,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for lun error %v: %v", err, string(out))
         }
 
         cmd = []string{"tgtadm", "-L", "iscsi", "-o", "bind", "-m", "target", "-t", tidstr, "-I", "127.0.0.1"}
@@ -264,7 +276,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target bind localhost error %v: %v", err, string(out))
         }
 
         cmd = []string{"nc3kxtarget", "--dump"}
@@ -272,7 +284,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for dump target error %v: %v", err, string(out))
         }
 
         cmd = []string{"iscsiadm", "-m", "discovery", "-t", "st", "-p", "127.0.0.1"}
@@ -280,7 +292,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for discovery target error %v: %v", err, string(out))
         }
 
         cmd = []string{"iscsiadm", "-m", "node", "-T", iqnname, "-p", "127.0.0.1", "-l"}
@@ -288,7 +300,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for login target error %v: %v", err, string(out))
         }
 
         // disk path  /dev/disk/by-path/ip-127.0.0.1\:3260-iscsi-iqn.2017-10-30.kx.flexnfs-nfs01-lun-2
@@ -310,7 +322,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for mkfs ext4 error %v: %v", err, string(out))
         }
 
         cmd = []string{"mount", "-t", "ext4", diskpath, path}
@@ -318,7 +330,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for target error %v: %v", err, string(out))
+            return nil, status.Errorf(codes.Internal, "failed createflexblockvol for mount target error %v: %v", err, string(out))
         }
 
     case blockAccess:
@@ -386,16 +398,102 @@ func deleteFlexblockVolume(volID string) error {
         return nil
     }
 
-    if vol.VolAccessType == blockAccess {
-        volPathHandler := volumepathhandler.VolumePathHandler{}
-        path := getVolumePath(volID)
-        glog.V(4).Infof("deleting loop device for file %s if it exists", path)
-        if err := volPathHandler.DetachFileDevice(path); err != nil {
-            return fmt.Errorf("failed to remove loop device for file %s: %v", path, err)
-        }
-    }
+    //if vol.VolAccessType == blockAccess {
+    //    volPathHandler := volumepathhandler.VolumePathHandler{}
+    //    path := getVolumePath(volID)
+    //    glog.V(4).Infof("deleting loop device for file %s if it exists", path)
+    //    if err := volPathHandler.DetachFileDevice(path); err != nil {
+    //        return fmt.Errorf("failed to remove loop device for file %s: %v", path, err)
+    //    }
+    //}
 
     path := getVolumePath(volID)
+
+    var cmd []string
+    executor := utilexec.New()
+    iqnname := fmt.Sprintf("iqn.2017-10-30.kx.flexcsi-%s", volID)
+
+    if vol.VolAccessType == mountAccess {
+        // umount 
+        cmd = []string{"umount", path}
+        glog.V(4).Infof("Command Start: %v", cmd)
+        outumount, errumount := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+        glog.V(4).Infof("Command Finish: %v", string(outumount))
+        if errumount != nil {
+            return status.Errorf(codes.Internal, "failed deleteflexblockvol for umount target error %v: %v", err, string(outumount))
+        }
+
+    }
+
+    cmd = []string{"iscsiadm", "-m", "node", "-T", iqnname, "-u"}
+    glog.V(4).Infof("Command Start: %v", cmd)
+    out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+    glog.V(4).Infof("Command Finish: %v", string(out))
+    if err != nil {
+        return status.Errorf(codes.Internal, "failed deleteflexblockvol for logout target error %v: %v", err, string(out))
+    }
+
+    cmd = []string{"iscsiadm", "-m", "discoverydb", "-n", iqnname, "-o", "delete", "-t", "st", "-p", "127.0.0.1"}
+    glog.V(4).Infof("Command Start: %v", cmd)
+    out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+    glog.V(4).Infof("Command Finish: %v", string(out))
+    if err != nil {
+        return status.Errorf(codes.Internal, "failed deleteflexblockvol for discoverydb delete target error %v: %v", err, string(out))
+    }
+
+    cmd = []string{"tgtadm", "-m", "target", "-o", "show"}
+    glog.V(4).Infof("Command Start: %v", cmd)
+    out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+    glog.V(4).Infof("Command Finish: %v", string(out))
+    if err != nil {
+        return status.Errorf(codes.Internal, "failed deleteflexblockvol for andes error %v: %v", err, string(out))
+    }
+    if !strings.Contains(string(out), iqnname) {
+        return status.Errorf(codes.Internal, "failed deleteflexblockvol find %v in target ", volID)
+    } else {
+        reg := regexp.MustCompile("Target [\\d]+: "+iqnname)
+        MEId := reg.FindString(string(out))
+
+        reg1 := regexp.MustCompile("Target [\\d]+:")
+        MEId1 := reg1.FindString(MEId)
+        l3:=strings.Count(MEId1,"")-1
+
+         
+        lasttid := 0
+        tgtinfolastindex := strings.LastIndex(MEId, MEId1)
+        if tgtinfolastindex != -1 {
+            lasttid1,_ := strconv.Atoi(MEId1[tgtinfolastindex+7:l3-1])
+            lasttid = lasttid1
+        }
+
+        tidstr := strconv.Itoa(lasttid)
+        // tgtadm -L iscsi -o delete -m target -t $tid
+        cmd = []string{"tgtadm", "-L", "iscsi", "-m", "target", "-o", "delete", "-t", tidstr}
+        glog.V(4).Infof("Command Start: %v", cmd)
+        out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+        glog.V(4).Infof("Command Finish: %v", string(out))
+        if err != nil {
+            return status.Errorf(codes.Internal, "failed deleteflexblockvol for delete target error %v: %v", err, string(out))
+        }
+
+        cmd = []string{"nc3kxtarget", "--dump"}
+        glog.V(4).Infof("Command Start: %v", cmd)
+        out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+        glog.V(4).Infof("Command Finish: %v", string(out))
+        if err != nil {
+            return status.Errorf(codes.Internal, "failed deleteflexblockvol for dump target error %v: %v", err, string(out))
+        }
+
+    }
+
+    cmd = []string{"xioadm", "vdi", "delete", volID}
+    glog.V(4).Infof("Command Start: %v", cmd)
+    out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+    glog.V(4).Infof("Command Finish: %v", string(out))
+    if err != nil {
+        return status.Errorf(codes.Internal, "failed deleteflexblockvol %v: %v", err, string(out))
+    }
+
     if err := os.RemoveAll(path); err != nil && !os.IsNotExist(err) {
         return err
     }
