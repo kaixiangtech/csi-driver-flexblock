@@ -246,7 +246,8 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
 
             reg1 := regexp.MustCompile("Target [\\d]+:")
             MEId1 := reg1.FindString(lasttidinfo)
-            l3:=strings.Count(MEId1,"")-1
+            // l3:=strings.Count(MEId1,"")-1
+            l3 := len(MEId1)
 
             lasttid1,_ := strconv.Atoi(MEId1[7:l3-1])
             lasttid = lasttid1
