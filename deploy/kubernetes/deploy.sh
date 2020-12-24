@@ -113,7 +113,7 @@ function version_gt() {
 # For snapshotter 2.0+, the directory has changed.
 SNAPSHOTTER_RBAC_RELATIVE_PATH="rbac.yaml"
 if version_gt $(rbac_version "${BASE_DIR}/flexblock/csi-flexblock-snapshotter.yaml" csi-snapshotter "${UPDATE_RBAC_RULES}") "v1.255.255"; then
-	SNAPSHOTTER_RBAC_RELATIVE_PATH="csi-snapshotter/rbac-csi-snapshotter.yaml"
+    SNAPSHOTTER_RBAC_RELATIVE_PATH="csi-snapshotter/rbac-csi-snapshotter.yaml"
 fi
 
 CSI_PROVISIONER_RBAC_YAML="https://raw.githubusercontent.com/kubernetes-csi/external-provisioner/$(rbac_version "${BASE_DIR}/flexblock/csi-flexblock-provisioner.yaml" csi-provisioner false)/deploy/kubernetes/rbac.yaml"
