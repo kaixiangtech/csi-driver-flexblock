@@ -387,7 +387,7 @@ func updateFlexblockVolume(volID string, volume flexBlockVolume) error {
         return nil
     }
 
-    size := fmt.Sprintf("%dM", flexBlockVolume.VolSize/mib)
+    size := fmt.Sprintf("%dM", volume.VolSize/mib)
     var cmd []string
     executor := utilexec.New()
     iqnname := fmt.Sprintf("iqn.2017-10-30.kx.flexcsi-%s", volID)
@@ -397,25 +397,25 @@ func updateFlexblockVolume(volID string, volume flexBlockVolume) error {
     out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
     glog.V(4).Infof("Command Finish: %v", string(out))
     if err != nil {
-        return nil, status.Errorf(codes.Internal, "failed updateflexblockvol %v: %v", err, string(out))
+        return status.Errorf(codes.Internal, "failed updateflexblockvol %v: %v", err, string(out))
     }
 
     cmd = []string{"iscsiadm", "-m", "node", "-T", iqnname, "-R"}
     glog.V(4).Infof("Command Start: %v", cmd)
-    out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+    out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
     glog.V(4).Infof("Command Finish: %v", string(out))
     if err != nil {
-        return nil, status.Errorf(codes.Internal, "failed updateflexblockvol update target %v: %v", err, string(out))
+        return status.Errorf(codes.Internal, "failed updateflexblockvol update target %v: %v", err, string(out))
     }
 
     diskpath :=  fmt.Sprintf("/dev/disk/by-path/ip-127.0.0.1:3260-iscsi-%s-lun-1", iqnname)
     if vol.VolAccessType == mountAccess {
         cmd = []string{"resize2fs", diskpath}
         glog.V(4).Infof("Command Start: %v", cmd)
-        out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+        out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
         glog.V(4).Infof("Command Finish: %v", string(out))
         if err != nil {
-            return nil, status.Errorf(codes.Internal, "failed updateflexblockvol resize fs target %v: %v", err, string(out))
+            return status.Errorf(codes.Internal, "failed updateflexblockvol resize fs target %v: %v", err, string(out))
         }
     }
 
