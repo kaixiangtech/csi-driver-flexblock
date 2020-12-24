@@ -21,6 +21,8 @@ import (
     "fmt"
     "os"
     "path"
+    "path/filepath"
+    "syscall"
 
     "192.168.108.165/kubernetes-csi/csi-driver-flexblock/pkg/flexblock"
 )
@@ -43,6 +45,27 @@ var (
 
 func main() {
     flag.Parse()
+    pidfile := "/var/run/flexblockplugin.pid"
+    if err := os.MkdirAll(filepath.Dir(pidfile), os.FileMode(0755)); err != nil {
+        return 
+    }
+    
+    file, err := os.OpenFile(pidfile, syscall.O_RDWR|syscall.O_CREAT|syscall.O_TRUNC, 0666)
+    if err != nil {
+        return 
+    }
+    defer file.Close() // in case we fail before the explicit close
+    
+    _, err = fmt.Fprintf(file, "%d", os.Getpid())
+    if err != nil {
+        return 
+    }
+    
+    err = file.Close()
+    if err != nil {
+        return 
+    }
+
 
     if *showVersion {
         baseName := path.Base(os.Args[0])
