@@ -26,7 +26,8 @@ import (
 )
 
 func init() {
-    flag.Set("logtostderr", "true")
+    flag.Set("logtostderr", "false")
+    flag.Set("log_dir", "/var/log/flexblockplugin")
 }
 
 var (
