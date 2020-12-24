@@ -294,6 +294,7 @@ func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateS
         glog.V(3).Infof("invalid create snapshot req: %v", req)
         return nil, err
     }
+    return nil, status.Error(codes.Unimplemented, "")
 
     if len(req.GetName()) == 0 {
         return nil, status.Error(codes.InvalidArgument, "Name missing in request")
