@@ -153,6 +153,7 @@ func discoverExistingSnapshots() {
     }
     for _, file := range files {
         isSnapshot, snapshotID := getSnapshotID(file.Name())
+        glog.V(4).Infof("find %s from file %s", snapshotID, dataRoot)
         if isSnapshot {
             glog.V(4).Infof("adding snapshot %s from file %s", snapshotID, getSnapshotPath(snapshotID))
             flexBlockVolumeSnapshots[snapshotID] = flexBlockSnapshot{
@@ -160,6 +161,18 @@ func discoverExistingSnapshots() {
                 Path:       getSnapshotPath(snapshotID),
                 ReadyToUse: true,
             }
+        } else {
+            VolID := file.Name()
+            glog.V(4).Infof("adding vol %s from %s", file.Name(), VolID)
+            // flexblockVol := flexBlockVolume{
+            //     VolID:         volID,
+            //     VolName:       name,
+            //     VolSize:       cap,
+            //     VolPath:       path,
+            //     VolAccessType: volAccessType,
+            //     Ephemeral:     ephemeral,
+            // }
+            // flexBlockVolumes[volID] = flexblockVol
         }
     }
 }
