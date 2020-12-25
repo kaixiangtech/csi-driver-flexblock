@@ -1,5 +1,9 @@
+VERSION=21.01.01.1
+GIT_VER=$(shell git rev-list HEAD| wc -l)
+GIT_COMMIT=$(shell git rev-parse --short HEAD)
+
 all:
-	go build -a -ldflags ' -X main.version=v1.0.0.0  -extldflags "-static"' -o ./bin/flexblockplugin ./cmd/flexblockplugin
+	go build -a -ldflags ' -X main.version=${VERSION}_${GIT_COMMIT}_${GIT_VER}  -extldflags "-static"' -o ./bin/flexblockplugin ./cmd/flexblockplugin
 clean:
 	rm -fr ./bin/
 install:

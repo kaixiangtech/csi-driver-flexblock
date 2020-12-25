@@ -1,6 +1,6 @@
 Name:   flexblock
 Version:        %{VERSION}_%{CUR_BR}_%{GIT_COMMIT}
-Release:        1%{?GIT_VER}
+Release:        %{?GIT_VER}
 Summary:        Kaixiangtech FlexBlock k8s csi plugin
 
 Group:  System Environment/Base
