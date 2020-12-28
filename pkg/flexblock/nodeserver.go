@@ -20,6 +20,7 @@ import (
     "fmt"
     "os"
     "strings"
+    "time"
 
     "github.com/golang/glog"
     "golang.org/x/net/context"
@@ -29,6 +30,7 @@ import (
     "google.golang.org/grpc/status"
     "k8s.io/kubernetes/pkg/volume/util/volumepathhandler"
     "k8s.io/utils/mount"
+    utilexec "k8s.io/utils/exec"
 )
 
 const TopologyKeyNode = "topology.flexblock.csi/node"
@@ -166,22 +168,78 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
         glog.V(4).Infof("target %v\nfstype %v\ndevice %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
             targetPath, fsType, deviceId, readOnly, volumeId, attrib, mountFlags)
 
-        options := []string{"bind"}
-        if readOnly {
-            options = append(options, "ro")
-        }
-        mounter := mount.New("")
         path := getVolumePath(volumeId)
-
-        if err := mounter.Mount(path, targetPath, "", options); err != nil {
-            var errList strings.Builder
-            errList.WriteString(err.Error())
-            if vol.Ephemeral {
-                if rmErr := os.RemoveAll(path); rmErr != nil && !os.IsNotExist(rmErr) {
-                    errList.WriteString(fmt.Sprintf(" :%s", rmErr.Error()))
+        pathnotMnt, patherr := mount.IsNotMountPoint(mount.New(""), path)
+        if patherr != nil {
+            if os.IsNotExist(err) {
+                if err = os.MkdirAll(targetPath, 0750); err != nil {
+                    return nil, status.Error(codes.Internal, err.Error())
                 }
+                pathnotMnt = true
             }
-            return nil, status.Error(codes.Internal, fmt.Sprintf("failed to mount device: %s at %s: %s", path, targetPath, errList.String()))
+        }
+        if pathnotMnt {
+            var cmd []string
+            executor := utilexec.New()
+
+            iqnname := fmt.Sprintf("iqn.2017-10-30.kx.flexcsi-%s", volumeId)
+
+            cmd = []string{"iscsiadm", "-m", "discovery", "-t", "st", "-p", "127.0.0.1"}
+            glog.V(4).Infof("Command Start: %v", cmd)
+            out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+            glog.V(4).Infof("Command Finish: %v", string(out))
+            if err != nil {
+                return nil, status.Errorf(codes.Internal, "failed publishVolume for discovery target error %v: %v", err, string(out))
+            }
+
+            cmd = []string{"iscsiadm", "-m", "node", "-T", iqnname, "-p", "127.0.0.1", "-l"}
+            glog.V(4).Infof("Command Start: %v", cmd)
+            out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+            glog.V(4).Infof("Command Finish: %v", string(out))
+            if err != nil {
+                return nil, status.Errorf(codes.Internal, "failed publishVolume for login target error %v: %v", err, string(out))
+            }
+
+            cmd = []string{"iscsiadm", "-m", "node", "-T", iqnname, "-p", "127.0.0.1", "-R"}
+            glog.V(4).Infof("Command Start: %v", cmd)
+            out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+            glog.V(4).Infof("Command Finish: %v", string(out))
+            if err != nil {
+                return nil, status.Errorf(codes.Internal, "failed publishVolume for rescan target error %v: %v", err, string(out))
+            }
+
+            time.Sleep(time.Duration(5)*time.Second)
+
+            // disk path  /dev/disk/by-path/ip-127.0.0.1\:3260-iscsi-iqn.2017-10-30.kx.flexnfs-nfs01-lun-2
+            diskpath :=  fmt.Sprintf("/dev/disk/by-path/ip-127.0.0.1:3260-iscsi-%s-lun-1", iqnname)
+
+            cmd = []string{"mount", "-t", "ext4", diskpath, targetPath}
+            glog.V(4).Infof("Command Start: %v", cmd)
+            out, err = executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
+            glog.V(4).Infof("Command Finish: %v", string(out))
+            if err != nil {
+                return nil, status.Errorf(codes.Internal, "failed publishflexblockvol for mount target error %v: %v", err, string(out))
+            }
+
+
+        } else {
+
+            options := []string{"bind"}
+            if readOnly {
+                options = append(options, "ro")
+            }
+            mounter := mount.New("")
+
+            if err := mounter.Mount(path, targetPath, "", options); err != nil {
+                var errList strings.Builder
+                errList.WriteString(err.Error())
+               if vol.Ephemeral {
+                    if rmErr := os.RemoveAll(path); rmErr != nil && !os.IsNotExist(rmErr) {
+                        errList.WriteString(fmt.Sprintf(" :%s", rmErr.Error()))
+                    }
+                }
+                return nil, status.Error(codes.Internal, fmt.Sprintf("failed to mount device: %s at %s: %s", path, targetPath, errList.String()))
+            }
         }
     }
 
