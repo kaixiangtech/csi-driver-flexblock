@@ -22,11 +22,11 @@ install:
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-resizer.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer.yaml
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-testing.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-testing.yaml
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-storageclass.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-storageclass.yaml
-	$(shell systemctl daemon-reload)
+	systemctl daemon-reload
 uninstall:
 	rm -f /usr/sbin/flexblockplugin
 	rm -f /lib/systemd/system/flexblockplugin.service
-	$(shell systemctl daemon-reload)
+	systemctl daemon-reload
 
 
 PHONY: all clean install uninstall
