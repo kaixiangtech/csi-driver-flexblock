@@ -27,6 +27,8 @@ import (
     "strconv"
     "time"
     "regexp"
+    "syscall"
+    "encoding/json"
 
     "github.com/golang/glog"
     "google.golang.org/grpc/codes"
@@ -145,6 +147,56 @@ func getSnapshotID(file string) (bool, string) {
     return false, ""
 }
 
+func discoverExistingVol() {
+    csijsonfile := "/etc/neucli/flexblock_csi_info.json"
+    glog.V(4).Infof("discovering existing vol in %s", csijsonfile)
+
+    _, ferr := os.Lstat(csijsonfile)
+    if os.IsNotExist(ferr) {
+        glog.V(4).Infof("no found configure file %s", csijsonfile)
+        return 
+    }
+    filePtr, err := os.Open(csijsonfile)
+    if err != nil {
+        fmt.Println("Open file failed [Err:%s]", err.Error())
+        return
+    }
+    defer filePtr.Close()
+
+
+    decoder := json.NewDecoder(filePtr)
+    err = decoder.Decode(&flexBlockVolumes)
+    if err != nil {
+        fmt.Println("Decoder failed", err.Error())
+
+    } else {
+        fmt.Println("Decoder success")
+        fmt.Println("load volume ", flexBlockVolumes)
+    }
+    
+}
+
+func saveExistingVol() {
+    csijsonfile := "/etc/neucli/flexblock_csi_info.json"
+    if ferr := os.MkdirAll(filepath.Dir(csijsonfile), os.FileMode(0755)); ferr != nil {
+        glog.V(4).Infof("can not open /etc/neucli/flexblock_csi_info.json file: %v", ferr)
+        return
+    }
+    csiinfofile, fileerr := os.OpenFile(csijsonfile, syscall.O_RDWR|syscall.O_CREAT|syscall.O_TRUNC, 0666)
+    if fileerr != nil {
+        glog.V(4).Infof("can not open /etc/neucli/flexblock_csi_info.json file: %v", fileerr)
+        return
+    }
+    defer csiinfofile.Close() // in case we fail before the explicit close
+
+    encoder := json.NewEncoder(csiinfofile)
+    jsonerr := encoder.Encode(flexBlockVolumes)
+    if jsonerr != nil {
+        glog.V(4).Infof("Encoder failed", jsonerr)
+    }
+
+}
+
 func discoverExistingSnapshots() {
     glog.V(4).Infof("discovering existing snapshots in %s", dataRoot)
     files, err := ioutil.ReadDir(dataRoot)
@@ -161,18 +213,6 @@ func discoverExistingSnapshots() {
                 Path:       getSnapshotPath(snapshotID),
                 ReadyToUse: true,
             }
-        } else {
-            VolID := file.Name()
-            glog.V(4).Infof("adding vol %s from %s", file.Name(), VolID)
-            // flexblockVol := flexBlockVolume{
-            //     VolID:         volID,
-            //     VolName:       name,
-            //     VolSize:       cap,
-            //     VolPath:       path,
-            //     VolAccessType: volAccessType,
-            //     Ephemeral:     ephemeral,
-            // }
-            // flexBlockVolumes[volID] = flexblockVol
         }
     }
 }
@@ -183,6 +223,7 @@ func (hp *flexBlock) Run() {
     hp.ns = NewNodeServer(hp.nodeID, hp.ephemeral, hp.maxVolumesPerNode)
     hp.cs = NewControllerServer(hp.ephemeral, hp.nodeID)
 
+    discoverExistingVol()
     discoverExistingSnapshots()
     s := NewNonBlockingGRPCServer()
     s.Start(hp.endpoint, hp.ids, hp.cs, hp.ns)
@@ -387,6 +428,9 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
         Ephemeral:     ephemeral,
     }
     flexBlockVolumes[volID] = flexblockVol
+
+    saveExistingVol()
+
     return &flexblockVol, nil
 }
 
@@ -433,6 +477,9 @@ func updateFlexblockVolume(volID string, volume flexBlockVolume) error {
     }
 
     flexBlockVolumes[volID] = volume
+
+    saveExistingVol()
+
     return nil
 }
 
@@ -546,6 +593,9 @@ func deleteFlexblockVolume(volID string) error {
         return err
     }
     delete(flexBlockVolumes, volID)
+
+    saveExistingVol()
+
     return nil
 }
 
