@@ -13,6 +13,7 @@ install:
 	mkdir -p ${DESTDIR}/lib/systemd/system/
 	mkdir -p ${DESTDIR}/usr/share/doc/flexblockplugin/
 	mkdir -p ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/
+	mkdir -p ${DESTDIR}/csi-flexblock-data-dir/
 	install -m 755 bin/flexblockplugin $(DESTDIR)/usr/sbin/
 	install -m 644 systemctl/flexblockplugin.service $(DESTDIR)/lib/systemd/system/
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-attacher.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-attacher.yaml

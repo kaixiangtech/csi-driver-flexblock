@@ -21,6 +21,7 @@ make install DESTDIR=%{buildroot}
 /lib/systemd/system/flexblockplugin.service
 /var/log/flexblockplugin/
 /var/lib/kubelet/plugins/csi-flexblock/
+/csi-flexblock-data-dir/
 /usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-attacher.yaml
 /usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-driverinfo.yaml
 /usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-plugin.yaml
