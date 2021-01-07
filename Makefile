@@ -22,6 +22,9 @@ install:
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-resizer.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer.yaml
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-testing.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-testing.yaml
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-storageclass.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-storageclass.yaml
+	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-attacher-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-attacher-rbac.yaml
+	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-provisioner-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-provisioner-rbac.yaml
+	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-resizer-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer-rbac.yaml
 	systemctl daemon-reload
 uninstall:
 	rm -f /usr/sbin/flexblockplugin
