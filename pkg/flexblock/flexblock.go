@@ -93,7 +93,7 @@ const (
     // Directory where data for volumes and snapshots are persisted.
     // This can be ephemeral within the container or persisted if
     // backed by a Pod volume.
-    dataRoot = "/csi-data-dir"
+    dataRoot = "/csi-flexblock-data-dir"
 
     // Extension with which snapshot files will be saved.
     snapshotExt = ".snap"
