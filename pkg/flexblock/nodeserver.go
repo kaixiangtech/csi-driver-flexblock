@@ -28,7 +28,7 @@ import (
     "github.com/container-storage-interface/spec/lib/go/csi"
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"
-    "k8s.io/kubernetes/pkg/volume/util/volumepathhandler"
+    // "k8s.io/kubernetes/pkg/volume/util/volumepathhandler"
     "k8s.io/utils/mount"
     utilexec "k8s.io/utils/exec"
 )
@@ -93,13 +93,15 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
             return nil, status.Error(codes.InvalidArgument, "cannot publish a non-block volume as block volume")
         }
 
-        volPathHandler := volumepathhandler.VolumePathHandler{}
-
-        // Get loop device from the volume path.
-        loopDevice, err := volPathHandler.GetLoopDevice(vol.VolPath)
-        if err != nil {
-            return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get the loop device: %v", err))
-        }
+        glog.V(4).Infof("find  volume: %s", vol.VolPath)
+        // volPathHandler := volumepathhandler.VolumePathHandler{}
+        // 
+        // // Get loop device from the volume path.
+        // loopDevice, err := volPathHandler.GetLoopDevice(vol.VolPath)
+        // if err != nil {
+        //     return nil, status.Error(codes.Internal, fmt.Sprintf("failed to get the loop device: %v", err))
+        // }
+        loopDevice := vol.VolPath
 
         mounter := mount.New("")
 
