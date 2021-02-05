@@ -29,9 +29,9 @@ make install DESTDIR=%{buildroot}
 /usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer.yaml
 /usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-testing.yaml
 /usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-storageclass.yaml
-/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-attacher-rbac.yaml
-/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-provisioner-rbac.yaml
-/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer-rbac.yaml
+/usr/share/doc/flexblockplugin/rbac/flexblock/csi-flexblock-attacher-rbac.yaml
+/usr/share/doc/flexblockplugin/rbac/flexblock/csi-flexblock-provisioner-rbac.yaml
+/usr/share/doc/flexblockplugin/rbac/flexblock/csi-flexblock-resizer-rbac.yaml
 %doc
 
 

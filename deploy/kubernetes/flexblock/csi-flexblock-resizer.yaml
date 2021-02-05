@@ -1,10 +1,12 @@
-kind: StatefulSet
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: csi-flexblock-resizer
+  labels:
+    app: csi-flexblock-resizer
 spec:
-  serviceName: "csi-flexblock-resizer"
-  replicas: 1
+  #serviceName: "csi-flexblock-resizer"
+  #replicas: 3
   selector:
     matchLabels:
       app: csi-flexblock-resizer

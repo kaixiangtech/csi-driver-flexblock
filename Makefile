@@ -13,6 +13,7 @@ install:
 	mkdir -p ${DESTDIR}/lib/systemd/system/
 	mkdir -p ${DESTDIR}/usr/share/doc/flexblockplugin/
 	mkdir -p ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/
+	mkdir -p ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/rbac/
 	mkdir -p ${DESTDIR}/csi-flexblock-data-dir/
 	install -m 755 bin/flexblockplugin $(DESTDIR)/usr/sbin/
 	install -m 644 systemctl/flexblockplugin.service $(DESTDIR)/lib/systemd/system/
@@ -23,9 +24,9 @@ install:
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-resizer.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer.yaml
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-testing.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-testing.yaml
 	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-storageclass.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-storageclass.yaml
-	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-attacher-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-attacher-rbac.yaml
-	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-provisioner-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-provisioner-rbac.yaml
-	install -m 644 deploy/kubernetes/flexblock/csi-flexblock-resizer-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/flexblock/csi-flexblock-resizer-rbac.yaml
+	install -m 644 deploy/kubernetes/rbac/csi-flexblock-attacher-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/rbac/csi-flexblock-attacher-rbac.yaml
+	install -m 644 deploy/kubernetes/rbac/csi-flexblock-provisioner-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/rbac/csi-flexblock-provisioner-rbac.yaml
+	install -m 644 deploy/kubernetes/rbac/csi-flexblock-resizer-rbac.yaml ${DESTDIR}/usr/share/doc/flexblockplugin/kubernetes/rbac/csi-flexblock-resizer-rbac.yaml
 	systemctl daemon-reload
 uninstall:
 	rm -f /usr/sbin/flexblockplugin

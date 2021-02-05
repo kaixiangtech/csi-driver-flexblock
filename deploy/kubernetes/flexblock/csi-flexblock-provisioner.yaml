@@ -1,10 +1,12 @@
-kind: StatefulSet
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: csi-flexblock-provisioner
+  labels:
+    app: csi-flexblock-provisioner
 spec:
-  serviceName: "csi-flexblock-provisioner"
-  replicas: 1
+  #serviceName: "csi-flexblock-provisioner"
+  #replicas: 3
   selector:
     matchLabels:
       app: csi-flexblock-provisioner

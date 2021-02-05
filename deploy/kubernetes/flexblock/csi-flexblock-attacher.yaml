@@ -1,10 +1,12 @@
-kind: StatefulSet
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: csi-flexblock-attacher
+  labels:
+    app: csi-flexblock-attacher
 spec:
-  serviceName: "csi-flexblock-attacher"
-  replicas: 1
+  #serviceName: "csi-flexblock-attacher"
+  #replicas: 3
   selector:
     matchLabels:
       app: csi-flexblock-attacher

@@ -18,13 +18,15 @@ spec:
   ports:
   - port: 10000 # fixed port inside the pod, dynamically allocated port outside
 ---
-kind: StatefulSet
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: csi-flexblock-socat
+  labels:
+    app: csi-flexblock-socat
 spec:
-  serviceName: "csi-flexblock-socat"
-  replicas: 1
+  #serviceName: "csi-flexblock-socat"
+  #replicas: 3
   selector:
     matchLabels:
       app: csi-flexblock-socat
