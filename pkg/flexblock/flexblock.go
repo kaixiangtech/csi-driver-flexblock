@@ -274,7 +274,7 @@ func createFlexblockVolume(volID, name string, cap int64, volAccessType accessTy
     glog.V(4).Infof("Command Start: %v", cmd)
     out, err := executor.Command(cmd[0], cmd[1:]...).CombinedOutput()
     glog.V(4).Infof("Command Finish: %v", string(out))
-    if err != nil {
+    if err != nil && !strings.Contains(string(out), "VDI exists already") {
         return nil, status.Errorf(codes.Internal, "failed createflexblockvol %v: %v", err, string(out))
     }
 
