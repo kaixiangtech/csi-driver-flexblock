@@ -75,6 +75,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
     if ephemeralVolume {
         volID := req.GetVolumeId()
         volName := fmt.Sprintf("ephemeral-%s", volID)
+        glog.V(4).Infof("start created volume %s: %s", volName, volID)
         vol, err := createFlexblockVolume(req.GetVolumeId(), volName, maxStorageCapacity, mountAccess, ephemeralVolume)
         if err != nil && !os.IsExist(err) {
             glog.Error("ephemeral mode failed to create volume: ", err)
