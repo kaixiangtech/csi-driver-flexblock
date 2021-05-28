@@ -556,7 +556,7 @@ func getClusterID() (int, int, int, error){
     storagepoolid := -1
     serviceclusterid := -1
 
-    if confinfo["csimod"] == "local" {
+    if confinfo["csimod"] == "" || confinfo["csimod"] == "local" {
         glog.V(4).Infof("plugin cfg mod local")
         return 0, 0, 0, nil
     }
